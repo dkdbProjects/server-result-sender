@@ -1,7 +1,7 @@
 #from flask import abort
 #!flask/bin/python
 from threading import Timer
-from flask import Flask, jsonify, abort
+from flask import Flask, jsonify, abort, request
 
 i = 0
 tasks = 0
@@ -19,6 +19,19 @@ tasks = [
     }
 ]
 
+@app.route('/todo/api/v1.0/taskspost', methods=['POST'])
+def create_task():
+    if not request.json or not 'title' in request.json:
+        abort(400)
+    task = {
+        'id': tasks[-1]['id'] + 1,
+        'title': request.json['title'],
+        'description': request.json.get('description', ""),
+        'done': True
+    }
+    request_split(request.json['title'])
+    return jsonify({'done': True}), 200
+
 @app.route('/todo/api/v1.0/tasks', methods=['GET'])
 def get_tasks():
     return jsonify({'tasks': tasks})
@@ -30,23 +43,29 @@ def get_task(task_id):
         abort(404)
     return jsonify({'task': task[0]})
 
-def read_file():
-    p = 1
-    #fo = open("C:\Users\Dasha\Desktop\cordova-acc.txt", "r")
-    with open("C:\Users\Dasha\Desktop\cordova-acc.txt") as f:
-        global lines
-        lines = f.read().splitlines()
-    #with open('C:\Users\Dasha\Desktop\cordova-acc.txt') as fp
-    #    for line in fp:
-    #        print line
-            #t = Timer(10.0, read_file)
-            #t.start()
+def request_split(requestForSplit):
+    temp = requestForSplit.split(',')
+    i = 1
+    count = 0
+    timeForAcc = []
+    timeForCompas = []
+    acc = []
+    compas = []
+    for element in temp:
+        if i == 1:
+            timeForAcc.append(temp[count])
+        if i == 2 or i == 3 or i == 4:
+            acc.append(temp[count])
+        if i == 5:
+            timeForCompas.append(temp[count])
+        if i == 6:
+            compas.append(temp[count])
+            i = 0
+        i = i + 1
+        count = count + 1
 
 def read_str(i):
     if i < len(lines):
-        #print(lines[i])
-        #Timer(2.0, read_str(i + 1)).start
-        #read_str(i + 1)
         global str
         str = lines[i]
         tasks[1] = str
@@ -57,12 +76,8 @@ def read_str(i):
         print("end")
 
 def timer(i):
-    #t.start()
     t = Timer(2.0, read_str(i)).start
-    #t.start()
 
 if __name__ == '__main__':
-    #i = 0
-    read_file()
-    read_str(i)
-    app.run()
+    app.run(host='0.0.0.0')
+

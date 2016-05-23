@@ -7,6 +7,7 @@ i = 0
 tasks = 0
 
 app = Flask(__name__)
+app.config.from_pyfile('server.cfg')
 
 tasks = [
     {

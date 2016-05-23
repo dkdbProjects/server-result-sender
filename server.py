@@ -44,6 +44,12 @@ def get_task(task_id):
         abort(404)
     return jsonify({'task': task[0]})
 
+
+@app.route("/test")
+def test():
+    return "<strong>It's Alive!</strong>"
+
+
 def request_split(requestForSplit):
     temp = requestForSplit.split(',')
     i = 1
@@ -80,5 +86,5 @@ def timer(i):
     t = Timer(2.0, read_str(i)).start
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0')
+    app.run()
 

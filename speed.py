@@ -113,7 +113,7 @@ def get_speed( speed, time, data, regr, values):
 values = 10
 trees=10
 
-f = open("train_data/speed_test_2.output")
+f = open("train_data/speed_acc_data.output")
 f.readline()  # skip the header
 
 # load accelerometer training data
@@ -145,7 +145,7 @@ regr_1.fit(X[:, [0,1]], y)
 print(regr_1.feature_importances_)
 
 # load check data
-f2 = open("train_data/new_accelerometer.output")
+f2 = open("test_data/accelerometer_test.output")
 f2.readline()  # skip the header
 data2 = np.loadtxt(f2, delimiter=',', usecols=(0,2))
 raw_X_test = data2[:, 1]

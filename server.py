@@ -1,12 +1,18 @@
+#!/usr/bin/python
 #from flask import abort
 #!flask/bin/python
+
+import speed
 from threading import Timer
 from flask import Flask, jsonify, abort, request
+import position
+
 
 last_speed = []
 last_coordinate = []
 i = 0
 tasks = 0
+time_for_acc = []
 
 app = Flask(__name__)
 app.config.from_pyfile('server.cfg')
@@ -105,5 +111,19 @@ def test():
 
 
 if __name__ == '__main__':
-    app.run()
+    speed.init()
+    #app.run()
+    list_of_speed = speed.start_speed()
+    print(len(list_of_speed))
+    time_for_acc = 2
+    angle = [45, 90, 10, 15, 90, 90, 90, 90]
+    x_coordinate = 10
+    y_coordinate = 20
+    coordinates = position.calculate_position(list_of_speed,time_for_acc,angle,x_coordinate,y_coordinate)
+    x_coordinate = coordinates[0]
+    y_coordinate = coordinates[1]
+    print("x")
+    print(x_coordinate)
+    print("y")
+    print(y_coordinate)
 

@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+
 print(__doc__)
 
 # Import the necessary modules and libraries
@@ -13,6 +14,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn import preprocessing
 
 np.set_printoptions(precision=3, suppress=True)
+speed_for_position = []
 
 def get_acc_array( raw_X, values ):
     # initialize new_X array
@@ -61,6 +63,7 @@ def calculate_speed(data, times, regr, values):
     global time_index
     global speed
     global prev_time
+
     delta_time = times[values*time_index] - prev_time
     speed_data = data[time_index]
     speed = get_speed(speed, delta_time/1000, speed_data, regr, values)
@@ -82,6 +85,8 @@ def calculate_speed(data, times, regr, values):
 #t_s = 0
 def get_speed( speed, time, data, regr, values):
 
+    global i
+    i = 0
     # predict
     print data
     data = np.array(data).reshape(1, 2)
@@ -104,68 +109,78 @@ def get_speed( speed, time, data, regr, values):
     # print speed
     print "Predicted %d" % Y_test[0]
     print "M speed is %2.f" % speed
+    speed_for_position.append(speed)
+    i = i + 1
     return speed
 
 ##########################################
 # Start point ############################
 ##########################################
+def start_speed():
+    values = 10
+    # load check data
+    f2 = open("test_data/accelerometer_test.output")
+    f2.readline()  # skip the header
+    data2 = np.loadtxt(f2, delimiter=',', usecols=(0,2))
+    raw_X_test = data2[:, 1]
+    X_test = get_acc_array(raw_X_test, values).reshape(len(raw_X_test)/values, 2)
+    
+    # predict
+    xx, yy = get_grid(X_test[:, [0, 1]])
+    Y_test = regr_1.predict(np.c_[xx.ravel(), yy.ravel()]).reshape(xx.shape)
+    
+    # plot
+    #plot_data(X_test, Y_test, X, y, [-5.0, 5.0], [-0.1, 1.5])
+    
+    #exit();
+    
+    # load time data
+    times = data2[:, 0]
+    #print times
+    
+    # start calculating speed
+    time_index = 7530/values
+    prev_time  = 0
+    speed = 0
+    #calculate_speed(X_test, times, regr_1, values)
+    speed_for_position = [20,40,50,60,40,90,0,30]
+    print(speed_for_position)
+    return speed_for_position
 
-values = 10
-trees=10
-
-f = open("train_data/speed_acc_data.output")
-f.readline()  # skip the header
-
-# load accelerometer training data
-# 0 column is time
-# 1 is X (turns)
-# 2 is Y (speed)
-# 3 is Z (vertical)
-# 4 is action_id
-data = np.loadtxt(f, delimiter=',', usecols=(2,4))
-f.close()
-raw_X = data[:, 0] # len is N
-rows = len(raw_X)/values
-X = get_acc_array(raw_X, values).reshape(rows, 2)
-print len(X)
-
-# load action_ids (labels)
-# 0 is not used
-# 1 is wait
-# 2 is constant motion
-# 3 is acceleration
-# 4 is deceleration
-raw_Y = data[:, 1] 
-y = get_label_array(raw_Y, values)
-print len(y)
-
-# Fit regression model
-regr_1 = RandomForestClassifier(n_estimators=trees)
-regr_1.fit(X[:, [0,1]], y)
-print(regr_1.feature_importances_)
-
-# load check data
-f2 = open("test_data/accelerometer_test.output")
-f2.readline()  # skip the header
-data2 = np.loadtxt(f2, delimiter=',', usecols=(0,2))
-raw_X_test = data2[:, 1]
-X_test = get_acc_array(raw_X_test, values).reshape(len(raw_X_test)/values, 2)
-
-# predict
-xx, yy = get_grid(X_test[:, [0, 1]])
-Y_test = regr_1.predict(np.c_[xx.ravel(), yy.ravel()]).reshape(xx.shape)
-
-# plot
-plot_data(X_test, Y_test, X, y, [-5.0, 5.0], [-0.1, 1.5])
-
-#exit();
-
-# load time data
-times = data2[:, 0]
-print times
-
-# start calculating speed
-time_index = 7530/values
-prev_time  = 0
-speed = 0
-calculate_speed(X_test, times, regr_1, values)
+def init():
+    values = 10
+    trees=10
+    
+    f = open("train_data/speed_acc_data.output")
+    f.readline()  # skip the header
+    
+    # load accelerometer training data
+    # 0 column is time
+    # 1 is X (turns)
+    # 2 is Y (speed)
+    # 3 is Z (vertical)
+    # 4 is action_id
+    data = np.loadtxt(f, delimiter=',', usecols=(2,4))
+    f.close()
+    raw_X = data[:, 0] # len is N
+    rows = len(raw_X)/values
+    X = get_acc_array(raw_X, values).reshape(rows, 2)
+    print len(X)
+    
+    # load action_ids (labels)
+    # 0 is not used
+    # 1 is wait
+    # 2 is constant motion
+    # 3 is acceleration
+    # 4 is deceleration
+    raw_Y = data[:, 1] 
+    global y
+    y = get_label_array(raw_Y, values)
+    print len(y)
+    
+    # Fit regression model
+    global regr_1
+    regr_1 = RandomForestClassifier(n_estimators=trees)
+    regr_1.fit(X[:, [0,1]], y)
+    print(regr_1.feature_importances_)
+    

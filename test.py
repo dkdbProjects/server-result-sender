@@ -4,105 +4,146 @@
 import sys
 import getopt
 import numpy   as np
-import common as cmn
+import common  as cmn
 import defects as df
+import init_server
 #import speed   as sp
+import defects as sp # should be removed when updaing speed is done
 #import turns   as tr
 #import position as pos
 #import road_quality as rq
 
 def test_module(module_name):
     if module_name == "position_module":         
-        test_position_module("test_data/accelerometer_test.output")
+        test_position_module("test_data/accelerometer_test.output", "yes")
     elif module_name == "road_quality_module":
-        test_road_quality_module("test_data/accelerometer_test.output")
+        test_road_quality_module("test_data/accelerometer_test.output", "yes")
     elif module_name == "speed_module":
-        test_speed_module("test_data/accelerometer_test.output")
+        test_speed_module("test_data/accelerometer_test.output", "yes")
     elif module_name == "turns_module" :
-        test_turns_module("test_data/accelerometer_test.output")
+        test_turns_module("test_data/accelerometer_test.output", "yes")
     elif module_name == "defects_module" :
-        test_defects_module("test_data/accelerometer_test.output")
+        test_defects_module("test_data/accelerometer_test.output", "yes")
     else :
         print 'No module with name', module_name
     return
 
-def test_position_module():
-    # position data structure: time,lat,lon,speed
+def test_position_module(filename, plot):
+    # position data structure: time,lat,lon,speed,elapsed_time
     return
 
-def test_road_quality_module():
-    # road_quality data structure: time,defect,turn,speed
+def test_road_quality_module(filename, plot):
+    # road quality use data from client
+    # structure: time,accx,accy,accz,compass,lat,lon,speed
+
+    # initialize modules
+    init_server.init_speed_module   ("train_data/speed_acc_data.output",   10, 10)
+    init_server.init_turns_module   ("train_data/turns_acc_data.output",   10, 10)
+    init_server.init_defects_module ("train_data/defects_acc_data.output", 10, 10)
+    init_server.init_road_quality_module("train_data/road_quality_data.output", 10, 10)
+
+    # load test data
+
+    # predict 
+    times     = ()
+    speeds    = ()
+    turns     = ()
+    defects   = ()
+    positions = ()
+
+    # skip turns (angle > 10)
+
+    # skip waiting (speed ~ 0)
+
+    # check is arrays is empty
+
+    # get new types for defects
+    
+    # write defects to DB
+
+    # analysis of set of defects and determine road quality
+
+    # compare with previous results of road quality analysis
+
+    # update road quality using voting procedure
+
     return
 
-def test_speed_module(filename):
-    print "test_speed_module: Warning! This function currently use defect_module, not speed_module!"
-    # should use sp instead df
-    # will changed when functions is added
-
-    # initialize defect module
+def test_speed_module(filename, plot):
+    # initialize speed module
     train_values    = 10
     train_trees     = 10
     filename_train  = "train_data/speed_acc_data.output"
-    # defects data use default accelerometer.output
-    # accelerometer.output: time,accx,accy,accz,label*
-    train_data      = cmn.aver_std_array(cmn.load_data(filename_train, (2,)), train_values)
-    train_predicted = cmn.label_array(cmn.load_data(filename_train, (4,)), train_values)
-    train_data = train_data.reshape(len(train_data)/2, 2)
-    df.init_defect_regression(train_values, train_trees, train_data, train_predicted)
-
-    # test defect module
+    init_server.init_speed_module(filename_train, train_values, train_trees) 
+    
+    # load test data
     test_values = 10
     test_data   = cmn.aver_std_array(cmn.load_data(filename, (2,)), test_values)
     test_times  = cmn.label_array(cmn.load_data(filename, (0,)), test_values)
     test_data = test_data.reshape(len(test_data)/2, 2)
-    xx, yy = cmn.get_grid(test_data[:, [0, 1]])
-    test_predicted = df.predicted(np.c_[xx.ravel(), yy.ravel()]).reshape(xx.shape)
-    cmn.plot_2D_data(test_data, test_predicted, train_data, train_predicted, [-5.0, 5.0], [-0.1, 2.5]);
-    df.find_actions(test_data, test_times)
+
+    # plot result
+    if plot == "yes" :
+        train_data      = cmn.aver_std_array(cmn.load_data(filename_train, (2,)), train_values)
+        train_predicted = cmn.label_array(cmn.load_data(filename_train, (4,)), train_values)
+        train_data = train_data.reshape(len(train_data)/2, 2)
+        xx, yy = cmn.get_grid(test_data[:, [0, 1]])
+        test_predicted = sp.predicted(np.c_[xx.ravel(), yy.ravel()]).reshape(xx.shape)
+        cmn.plot_2D_data(test_data, test_predicted, train_data, train_predicted, [-5.0, 5.0], [-0.1, 2.5]);
+
+    # start finding by time
+    sp.find_actions(test_data, test_times)
     return
 
-def test_turns_module(filename):
+def test_turns_module(filename, plot):
     # initialize turns module 
     train_values   = 10
     train_trees    = 10
     filename_train = "train_data/turn_com_data.output"
-    # turns use default compass.output
-    # compass.output: time,magn,label*
-    train_data      = cmn.aver_std_array(cmn.load_data(filename_train, (1,)), train_values)
-    train_predicted = cmn.label_array(cmn.load_data(filename_train, (2,)), train_values)
-    #tr.init_defect_regression(train_values, train_trees, train_data, train_predicted)
+    init_server.init_turns_module(filename_train, train_values, train_trees)
 
-    # test defect module
+    # load test data
     test_values = 10
     test_data   = cmn.aver_std_array(cmn.load_data(filename, (1,)), test_values)
     test_times  = cmn.label_array(cmn.load_data(filename, (0,)), test_values)
     test_data   = test_data.reshape(len(test_data)/2, 2)
-    xx, yy = cmn.get_grid(test_data[:, [0, 1]])
-    test_predicted = tr.predicted(np.c_[xx.ravel(), yy.ravel()]).reshape(xx.shape)
-    #plot_2D_data(test_data, tr.predicted(test_data), train_data, train_predicted, [-5.0, 5.0], [-2.0, 2.0]);
-    #tr.find_actions(test_data, test_times)
+    
+    # plot results
+    if plot == "yes" :
+        train_data      = cmn.aver_std_array(cmn.load_data(filename_train, (1,)), train_values)
+        train_predicted = cmn.label_array(cmn.load_data(filename_train, (2,)), train_values)
+        train_data = train_data.reshape(len(train_data)/2, 2)
+        xx, yy = cmn.get_grid(test_data[:, [0, 1]])
+        test_predicted = tr.predicted(np.c_[xx.ravel(), yy.ravel()]).reshape(xx.shape)
+        plot_2D_data(test_data, tr.predicted(test_data), train_data, train_predicted, [-5.0, 5.0], [-2.0, 2.0]);
+
+    # start finding by time
+    tr.find_actions(test_data, test_times)
     return
 
-def test_defects_module(filename):
+def test_defects_module(filename, plot):
     # initialize defect module
     train_values    = 10
     train_trees     = 10
     filename_train  = "train_data/speed_acc_data.output"
-    # defects data use default accelerometer.output
-    # accelerometer.output: time,accx,accy,accz,label*
-    train_data      = cmn.aver_std_array(cmn.load_data(filename_train, (3,)), train_values)
-    train_predicted = cmn.label_array(cmn.load_data(filename_train, (4,)), train_values)
-    train_data = train_data.reshape(len(train_data)/2, 2)
-    df.init_defect_regression(train_values, train_trees, train_data, train_predicted)
+    init_server.init_defects_module(filename_train, train_values, train_trees)
 
-    # test defect module
+    # load test data
     test_values = 10
     test_data   = cmn.aver_std_array(cmn.load_data(filename, (3,)), test_values)
     test_times  = cmn.label_array(cmn.load_data(filename, (0,)), test_values)
     test_data = test_data.reshape(len(test_data)/2, 2)
-    xx, yy = cmn.get_grid(test_data[:, [0, 1]])
-    test_predicted = df.predicted(np.c_[xx.ravel(), yy.ravel()]).reshape(xx.shape)
-    cmn.plot_2D_data(test_data, test_predicted, train_data, train_predicted, [-20.0, 20.0], [-0.1, 10.0]);
+
+    # plot results
+    if plot == "yes" :
+        train_data      = cmn.aver_std_array(cmn.load_data(filename_train, (3,)), train_values)
+        train_predicted = cmn.label_array(cmn.load_data(filename_train, (4,)), train_values)
+        train_data = train_data.reshape(len(train_data)/2, 2)
+        xx, yy = cmn.get_grid(test_data[:, [0, 1]])
+        test_predicted = df.predicted(np.c_[xx.ravel(), yy.ravel()]).reshape(xx.shape)
+        cmn.plot_2D_data(test_data, test_predicted, train_data, train_predicted, [-20.0, 20.0], [-0.1, 10.0]);
+
+    # start finding by time
     df.find_actions(test_data, test_times)
     return
 

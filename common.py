@@ -7,7 +7,7 @@ from sklearn import preprocessing
 
 def load_data(filename, cols) :
     # TODO: should be improved later
-    print "load_data: Warning! This function return only one column! Be careful!"
+    # print "load_data: Warning! This function return only one column! Be careful!"
     f = open(filename)
     f.readline()  # skip the header 
     data = np.loadtxt(f, delimiter=',', usecols=cols)
@@ -16,8 +16,8 @@ def load_data(filename, cols) :
 def get_grid(data):
     x_min, x_max = data[:, 0].min() - 1, data[:, 0].max() + 1
     y_min, y_max = data[:, 1].min() - 1, data[:, 1].max() + 1
-    return np.meshgrid(np.arange(x_min, x_max, 0.01),
-                       np.arange(y_min, y_max, 0.01))
+    return np.meshgrid(np.arange(x_min, x_max, 0.5),
+                       np.arange(y_min, y_max, 0.5))
 
 def plot_2D_data(test_data, test_predicted, train_data, train_predicted, range_x, range_y):
     plt.figure()
@@ -54,3 +54,23 @@ def label_array( data, values ):
         # print np.argmax(counts) 
         new_data = np.append(new_data, [np.argmax(counts)])
     return new_data
+
+def sum_array ( data, values ): 
+    new_data = ()
+    # rows = len(data)/values
+    # data.resize(rows*values, 1)
+    print "Data: " + data
+    low, high, tent = np.hsplit(data, 1)
+    print "Low:  " + low
+    print "High: " + high
+    print "Tent: " + tent
+    
+    return new_data
+
+
+def get_diff_array(data):
+    data = np.diff(data) # len is N - 1
+    data = np.append(data, data[0]) # append first element to the end, len is N
+    data = np.array(data).reshape((len(data), 1)) # reshape if single feature
+    return data
+

@@ -93,9 +93,9 @@ def test_road_quality_module(filename, plot, test_type):
         print bcolors.OKGREEN + "Done! speed data:\n" + bcolors.ENDC, predicted_speed
 
         print bcolors.HEADER + "Start getting turns data" + bcolors.ENDC
-        test_turns_data = cmn.get_diff_array(cmn.load_data(filename, (1,)))
+        test_turns_data = cmn.get_diff_array(cmn.load_data(filename, (4,)))
         test_turns_data = cmn.aver_std_array(test_turns_data, test_values)
-        test_turns_data = test_turn_data.reshape(len(test_turns_data)/2, 2)
+        test_turns_data = test_turns_data.reshape(len(test_turns_data)/2, 2)
         predicted_turns = df.predicted(test_turns_data)
         predicted_turns = predicted_turns.reshape(len(predicted_turns), 1)
         print bcolors.OKGREEN + "Done! turns data:\n" + bcolors.ENDC, predicted_turns
@@ -192,9 +192,9 @@ def test_behavior_defects_module(filename, plot, test_type):
         print bcolors.OKGREEN + "Done! speed data:\n" + bcolors.ENDC, predicted_speed
 
         print bcolors.HEADER + "Start getting turns data" + bcolors.ENDC
-        test_turns_data = cmn.get_diff_array(cmn.load_data(filename, (1,)))
+        test_turns_data = cmn.get_diff_array(cmn.load_data(filename, (4,)))
         test_turns_data = cmn.aver_std_array(test_turns_data, test_values)
-        test_turns_data = test_turn_data.reshape(len(test_turns_data)/2, 2)
+        test_turns_data = test_turns_data.reshape(len(test_turns_data)/2, 2)
         predicted_turns = df.predicted(test_turns_data)
         predicted_turns = predicted_turns.reshape(len(predicted_turns), 1)
         print bcolors.OKGREEN + "Done! turns data:\n" + bcolors.ENDC, predicted_turns
@@ -249,7 +249,7 @@ def test_behavior_defects_module(filename, plot, test_type):
 def test_speed_module(filename, plot):
     # initialize speed module
     train_values    = 10
-    train_trees     = 10
+    train_trees     = 15
     filename_train  = "train_data/speed_acc_data.output"
     init_server.init_speed_module(filename_train, train_values, train_trees) 
     
@@ -266,7 +266,7 @@ def test_speed_module(filename, plot):
         train_predicted = cmn.label_array(cmn.load_data(filename_train, (4,)), train_values)
         xx, yy = cmn.get_grid(test_data[:, [0, 1]])
         test_predicted = sp.predicted(np.c_[xx.ravel(), yy.ravel()]).reshape(xx.shape)
-        cmn.plot_2D_data(test_data, test_predicted, train_data, train_predicted, [-5.0, 5.0], [-0.1, 2.5]);
+        cmn.plot_2D_data(test_data, test_predicted, test_data, sp.predicted(test_data), [-5.0, 5.0], [-0.1, 2.5]);
 
     # start finding by time
     sp.find_actions(test_data, test_times)
@@ -274,14 +274,14 @@ def test_speed_module(filename, plot):
 
 def test_turns_module(filename, plot):
     # initialize turns module 
-    train_values   = 5
-    train_trees    = 12
+    train_values   = 10
+    train_trees    = 7
     filename_train = "train_data/turns_com_data.output"
     init_server.init_turns_module(filename_train, train_values, train_trees)
 
     # load test data
     test_values = 10
-    #test_data  = cmn.aver_std_array(cmn.load_data(filename, (1,)), test_values)
+    test_aver_data  = cmn.aver_std_array(cmn.load_data(filename, (1,)), test_values)
     test_data   = cmn.get_diff_array(cmn.load_data(filename, (1,)))
     test_data   = cmn.aver_std_array(test_data, test_values)
     test_data   = np.array(test_data).reshape(len(test_data)/2, 2)
@@ -293,9 +293,9 @@ def test_turns_module(filename, plot):
         train_data      = cmn.aver_std_array(train_data, train_values)
         train_data      = train_data.reshape(len(train_data)/2, 2)
         train_predicted = cmn.label_array(cmn.load_data(filename_train, (2,)), train_values)
-        xx, yy = cmn.get_grid(test_data[:, [0, 1]])
-        test_predicted = tr.predicted(np.c_[xx.ravel(), yy.ravel()]).reshape(xx.shape)
-        cmn.plot_2D_data(test_data, test_predicted, train_data, train_predicted, [-40.0, 40.0], [-1.0, 5.0]);
+        xx, yy = cmn.get_grid(train_data[:, [0, 1]])
+        train_predicted = tr.predicted(np.c_[xx.ravel(), yy.ravel()]).reshape(xx.shape)
+        cmn.plot_2D_data(train_data, train_predicted, test_data, tr.predicted(test_data), [-2.0, 2.0], [-0.1, 1.5]);
 
     # start finding by time
     tr.find_actions(test_data, test_times)

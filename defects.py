@@ -7,7 +7,7 @@ import numpy as np
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import RandomForestClassifier
 
-defect_regr = ()
+defects_regr = ()
 np.set_printoptions(precision=3, suppress=True)
 
 
@@ -36,44 +36,44 @@ def label_array( data, values ):
         new_data = np.append(new_data, [np.argmax(counts)])
     return new_data
 
-time_index = 0
-prev_time = 0 
+defects_time_index = 0
+defects_time_prev = 0 
 def find_actions(data, times):
     # TODO: static vars in C-style?
-    global time_index
-    global prev_time
-    delta_time = times[time_index] - prev_time
-    row = data[time_index]
+    global defects_time_index
+    global defects_time_prev
+    delta_time = times[defects_time_index] - defects_time_prev
+    row = data[defects_time_index]
     result = predict_defect(row, delta_time/1000)
     
-    prev_time = times[time_index]
-    print "Time: %f" % prev_time
-    time_index += 1
+    defects_time_prev = times[defects_time_index]
+    print "Time: %f" % defects_time_prev
+    defects_time_index += 1
  
-    if time_index < len(times) :
-        next_call_time = (times[time_index] - prev_time)/1000.0
+    if defects_time_index < len(times) :
+        next_call_time = (times[defects_time_index] - defects_time_prev)/1000.0
         print "Next call: %f" % next_call_time
         threading.Timer(next_call_time, find_actions, [data, times]).start()
     else : 
          print len(times)
-         print "time is out %d" % time_index
+         print "time is out %d" % defects_time_index
     return result 
 
 def predict_defect( data, time):
-    global defect_regr
+    global defects_regr
     data = np.array(data).reshape(1, 2)
-    predicted_test = defect_regr.predict(data)
+    predicted_test = defects_regr.predict(data)
     acceleration = data.item((0, 0))
     print "Predicted %d" % predicted_test[0]
     return predicted_test[0]
 
-def init_defect_regression(values, trees, data, labels):
+def init_defects_module(values, trees, data, labels):
     # Fit regression model
-    global defect_regr
-    defect_regr = RandomForestClassifier(n_estimators=trees)
-    defect_regr.fit(data[:, [0,1]], labels)
-    print(defect_regr.feature_importances_)
+    global defects_regr
+    defects_regr = RandomForestClassifier(n_estimators=trees)
+    defects_regr.fit(data[:, [0,1]], labels)
+    print "init_defects_module: ", defects_regr.feature_importances_
     return
 
 def predicted(data):
-   return defect_regr.predict(data)
+   return defects_regr.predict(data)

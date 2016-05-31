@@ -7,7 +7,7 @@ import numpy as np
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import RandomForestClassifier
 
-behavior_defect_regr = ()
+behavior_defects_regr = ()
 np.set_printoptions(precision=3, suppress=True)
 
 
@@ -44,7 +44,7 @@ def find_actions(data, times):
     global prev_time
     delta_time = times[time_index] - prev_time
     row = data[time_index]
-    result = predict_defect(row, delta_time/1000)
+    result = predict_defects(row, delta_time/1000)
     
     prev_time = times[time_index]
     print "Time: %f" % prev_time
@@ -59,21 +59,21 @@ def find_actions(data, times):
          print "time is out %d" % time_index
     return result 
 
-def predict_defect( data, time):
-    global behavior_defect_regr
+def predict_defects( data, time):
+    global behavior_defects_regr
     data = np.array(data).reshape(1, 3)
-    predicted_test = behavior_defect_regr.predict(data)
+    predicted_test = behavior_defects_regr.predict(data)
     acceleration = data.item((0, 0))
     print "Predicted %d" % predicted_test[0]
     return predicted_test[0]
 
-def init_behavior_defect_regression(values, trees, data, labels):
+def init_behavior_defects_module(values, trees, data, labels):
     # Fit regression model
-    global behavior_defect_regr
-    behavior_defect_regr = RandomForestClassifier(n_estimators=trees)
-    behavior_defect_regr.fit(data[:, [0,1,2]], labels)
-    print(behavior_defect_regr.feature_importances_)
+    global behavior_defects_regr
+    behavior_defects_regr = RandomForestClassifier(n_estimators=trees)
+    behavior_defects_regr.fit(data[:, [0,1,2]], labels)
+    print "init_behavior_defects_module", behavior_defects_regr.feature_importances_
     return
 
 def predicted(data):
-   return behavior_defect_regr.predict(data)
+   return behavior_defects_regr.predict(data)

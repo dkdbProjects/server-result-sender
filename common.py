@@ -16,8 +16,8 @@ def load_data(filename, cols) :
 def get_grid(data):
     x_min, x_max = data[:, 0].min() - 1, data[:, 0].max() + 1
     y_min, y_max = data[:, 1].min() - 1, data[:, 1].max() + 1
-    return np.meshgrid(np.arange(x_min, x_max, 0.5),
-                       np.arange(y_min, y_max, 0.5))
+    return np.meshgrid(np.arange(x_min, x_max, 0.01),
+                       np.arange(y_min, y_max, 0.01))
 
 def plot_2D_data(test_data, test_predicted, train_data, train_predicted, range_x, range_y):
     plt.figure()
@@ -25,7 +25,7 @@ def plot_2D_data(test_data, test_predicted, train_data, train_predicted, range_x
     plt.xlim(range_x)
     xx, yy = get_grid(test_data[:, [0, 1]])
     plt.pcolormesh(xx, yy, test_predicted, cmap='seismic')
-    plt.scatter(train_data[:, 0], train_data[:, 1], c=train_predicted, s=len(train_data[:, 1]), cmap='seismic')
+    plt.scatter(train_data[:, 0], train_data[:, 1], c=train_predicted, s=len(train_data[:, 1])/16, cmap='seismic')
     plt.show()
     return;
 

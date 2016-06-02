@@ -72,7 +72,7 @@ def get_pos():
     acc_data = acc_data.reshape(len(acc_data)/2, 2)
     speeds = sp.calculate_speed(acc_data, sp.predicted(acc_data), times, speed)
 
-    coordinates = pos.calculate_position(speeds, times, directions, lat, lon) #, speed)
+    coordinates = pos.calculate_position(speeds, tim_data, directions, lat, lon) #, speed)
 
     result = "<strong>lat:" + str(coordinates[0]) + ";lon:" + str(coordinates[1]) + ";speed:" + str(speeds[-1]) + "</strong>\n"
     print bcolors.OKGREEN, result, bcolors.ENDC

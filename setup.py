@@ -10,9 +10,6 @@ setup(name='FlaskApp',
                         'Flask-MySQLdb>=0.2.0',
                         'Flask-RESTful>=0.3.5',
                         'utm>=0.4.0',
-                        'numpy>=1.11.0',
-                        'scipy>=0.17.1',
-                        'scikit-learn>=0.17.1',
-                        'matplotlib>=1.5.1'
+                        'scikit-learn>=0.17.1'
       ]
      )

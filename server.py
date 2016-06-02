@@ -36,7 +36,7 @@ def get_map(lat, lon, zoom):
     # get polylines from db in nearest area of user position
 
     # create reply
-    result = "<strong>" , lat , "," , lon, "," , zoom , "</strong>"
+    result = "<strong>" + str(lat) + "," + str(lon) + "," + str(zoom) + "</strong>"
     # return result
     return result
 
@@ -74,7 +74,7 @@ def get_pos():
 
     coordinates = pos.calculate_position(speeds, times, directions, lat, lon) #, speed)
 
-    result = "\n<strong>lat:" + str(coordinates[0]) + ";lon:" + str(coordinates[1]) + ";speed:" + str(speeds[-1]) + "</strong>\n"
+    result = "<strong>lat:" + str(coordinates[0]) + ";lon:" + str(coordinates[1]) + ";speed:" + str(speeds[-1]) + "</strong>\n"
     print bcolors.OKGREEN, result, bcolors.ENDC
     return result
 

@@ -44,13 +44,14 @@ def get_map(lat, lon, zoom):
 def send_data():
     return "<strong>send_collected_data</strong>"
 
-@app.route("/get_position", methods=['GET'])
+@app.route("/get_position", methods=['POST'])
 def get_pos():
-    data = request.json
-    separator = ','
-
     # get data
+    print bcolors.OKBLUE + "/get_position, POST" + bcolors.ENDC
     try:
+        print bcolors.HEADER + "Try get data..." + bcolors.ENDC
+        separator = ','
+        data = request.json
         values = np.fromstring(data.get("values"), sep=separator)[0]
         lat    = np.fromstring(data.get("lat"),    sep=separator)[0]
         lon    = np.fromstring(data.get("lon"),    sep=separator)[0]
@@ -58,6 +59,7 @@ def get_pos():
         acc_data = np.fromstring(data.get("acc_data"), sep=separator)
         com_data = np.fromstring(data.get("com_data"), sep=separator)
         tim_data = np.fromstring(data.get("tim_data"), sep=separator)
+        print bcolors.OKGREEN + "Done!" + bcolors.ENDC
     except Exception as e:
         print bcolors.FAIL + "get_position: there are an exception! Pls, check data!" + bcolors.ENDC
         abort(400)
@@ -71,13 +73,16 @@ def get_pos():
     acc_data = cmn.aver_std_array(acc_data, values)
     acc_data = acc_data.reshape(len(acc_data)/2, 2)
     speeds = sp.calculate_speed(acc_data, sp.predicted(acc_data), times, speed)
+    print speeds
+    coordinates = pos.calculate_position(speeds, tim_data, directions, lat, lon)
 
-    coordinates = pos.calculate_position(speeds, tim_data, directions, lat, lon) #, speed)
+    _lat   = "%.6f" % coordinates[0]
+    _lon   = "%.6f" % coordinates[1]
+    _speed = "%.2f" % coordinates[2]
 
-    result = "<strong>lat:" + str(coordinates[0]) + ";lon:" + str(coordinates[1]) + ";speed:" + str(speeds[-1]) + "</strong>\n"
+    result = "lat: " + _lat  + "; lon: " + _lon + "; speed: " + _speed + "</strong>\n"
     print bcolors.OKGREEN, result, bcolors.ENDC
-    return result
-
+    return jsonify(lat=_lat, lon=_lon, speed=_speed)
 
 if __name__ == '__main__':
     # initialize modules for classification

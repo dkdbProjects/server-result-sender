@@ -10,32 +10,6 @@ from sklearn.ensemble import RandomForestClassifier
 speed_regr = ()
 np.set_printoptions(precision=3, suppress=True)
 
-
-def aver_std_array( data, values ):
-    # initialize new_data array
-    new_data = ()
-    # round by
-    data = np.around(data, decimals=1)
-    # reshape in 'rows' = 'len(data)/values', columns = 'values'
-    rows = len(data)/values
-    data.resize(rows*values, 1)
-    data = np.array(data).reshape(rows, values)
-    # this axis need to get line regrassion parameters
-    for row in data:
-        new_data = np.append(new_data, [np.average(row), np.std(row)])
-        # print np.array([np.average(row), np.std(row)]);
-    return new_data
-
-def label_array( data, values ):
-    new_data = ()
-    data = np.array(data).astype(int)
-    data.resize(len(data)/values, values)
-    for row in data:
-        counts = np.bincount(row)
-        # print np.argmax(counts)
-        new_data = np.append(new_data, [np.argmax(counts)])
-    return new_data
-
 speed_time_index = 0
 speed_time_prev = 0 
 def find_actions(data, times):
@@ -79,15 +53,18 @@ def predicted(data):
    return speed_regr.predict(data)
 
 def calculate_speed(data, predicted_data, times, speed):
-    result = np.empty([1,1])
+    result = np.empty([len(data)+1,1])
     result.fill(speed)
     prev_time = 0
-    for i in np.arange (len(data) - 1) :
+    print "calc speed, len(data) ", len(data)
+    for i in np.arange (len(data)) :
          delta_time = times[i] - prev_time
          prev_time = times[i]
          predicted_action = predicted_data[i]
-         speed = get_speed(speed, delta_time/1000, data.item((0,0)), predicted_data[i])
-         np.insert(result, len(result), speed)
+         speed = get_speed(speed, delta_time/1000, result.item(-1), predicted_data[i])
+         print "speed ", speed, " result ", result.item(-1)
+         result[i+1] = speed
+         #np.insert(result, i, speed)
     return result
 
 def get_speed( speed, time, acceleration, action):

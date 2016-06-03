@@ -21,6 +21,7 @@ def calculate_position(speed,time,angle,x,y):
     newy = utmcoor[1] + dif_y;
     print(utm.to_latlon(newx,newy,utmcoor[2],utmcoor[3]))
     coordinates = utm.to_latlon(newx,newy,utmcoor[2],utmcoor[3])
+    coordinates += (speed_av,)
     return (coordinates)
 
 

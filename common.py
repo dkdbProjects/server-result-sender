@@ -23,9 +23,9 @@ def plot_2D_data(test_data, test_predicted, train_data, train_predicted, range_x
     plt.figure()
     plt.ylim(range_y)
     plt.xlim(range_x)
-    xx, yy = get_grid(test_data[:, [0, 1]])
-    plt.pcolormesh(xx, yy, test_predicted, cmap='seismic')
-    plt.scatter(train_data[:, 0], train_data[:, 1], c=train_predicted, s=len(train_data[:, 1])/16, cmap='seismic')
+    xx, yy = get_grid(train_data[:, [0, 1]])
+    plt.pcolormesh(xx, yy, train_predicted, cmap='seismic')
+    plt.scatter(test_data[:, 0], test_data[:, 1], c=test_predicted, s=len(test_data[:, 1])/16, cmap='seismic')
     plt.show()
     return;
 
@@ -71,6 +71,6 @@ def sum_array ( data, values ):
 def get_diff_array(data):
     data = np.diff(data) # len is N - 1
     data = np.append(data, data[0]) # append first element to the end, len is N
-    data = np.array(data).reshape((len(data), 1)) # reshape if single feature
+    data = np.array(data).reshape((len(data), 1))
     return data
 

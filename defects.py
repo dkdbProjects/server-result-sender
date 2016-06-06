@@ -8,7 +8,7 @@ from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import RandomForestClassifier
 
 defects_regr = ()
-np.set_printoptions(precision=3, suppress=True)
+#np.set_printoptions(precision=3, suppress=True)
 
 
 def aver_std_array( data, values ):

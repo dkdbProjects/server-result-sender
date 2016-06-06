@@ -7,7 +7,7 @@ from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import RandomForestClassifier
 
 turns_regr = ()
-np.set_printoptions(precision=3, suppress=True)
+#np.set_printoptions(precision=3, suppress=True)
 
 turns_time_index = 0
 turns_time_prev = 0

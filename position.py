@@ -4,24 +4,17 @@
 import math
 import utm
 
-def calculate_position(speed,time,angle,x,y):
-    i = 0
-    time_dif = time[len(time)-1] - time[0]
-    print("time")
-    print(time_dif)
-    dif_x = 0
-    dif_y = 0
-    speed_av = sum(speed)/len(speed)
-    angle_av = sum(angle)/len(angle)
-    dif_x = speed_av*5/18*math.sin(angle_av*math.pi/180)*(time_dif)
-    dif_y = speed_av*5/18*math.cos(angle_av*math.pi/180)*(time_dif)
-    utmcoor = utm.from_latlon(x,y)
-    print(utmcoor)
+def calculate_position(speed, time, angle, lat, lon):
+    dif_x = speed * 5/18 * math.sin( angle*math.pi/180 )*time
+    dif_y = speed * 5/18 * math.cos( angle*math.pi/180 )*time
+    utmcoor = utm.from_latlon(lat, lon)
     newx = utmcoor[0] + dif_x;
     newy = utmcoor[1] + dif_y;
-    print(utm.to_latlon(newx,newy,utmcoor[2],utmcoor[3]))
-    coordinates = utm.to_latlon(newx,newy,utmcoor[2],utmcoor[3])
-    coordinates += (speed_av,)
+    print "old x and y ", utmcoor
+    print "new x and y ", (newx, newy)
+    coordinates = utm.to_latlon(newx, newy, utmcoor[2], utmcoor[3])
+    print "old lat and lon ", (lat, lon)
+    print "new lat and lon ", coordinates
     return (coordinates)
 
 

@@ -8,7 +8,7 @@ from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import RandomForestClassifier
 
 speed_regr = ()
-np.set_printoptions(precision=3, suppress=True)
+#np.set_printoptions(precision=3, suppress=True)
 
 speed_time_index = 0
 speed_time_prev = 0 
@@ -69,7 +69,6 @@ def calculate_speed(data, predicted_data, times, speed):
 
 def get_speed( speed, time, acceleration, action):
 
-    print speed, time, acceleration, action
     if action == 1:
         speed = 0
     if action == 2:
@@ -78,8 +77,5 @@ def get_speed( speed, time, acceleration, action):
         speed = speed + acceleration * time * 3.6
     if action == 4:
         speed = speed + acceleration * time * 3.6
-
-    # print speed
-    print "Speed is %2.f" % speed
     return speed
 

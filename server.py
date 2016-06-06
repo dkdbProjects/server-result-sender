@@ -97,6 +97,7 @@ def get_pos():
         lat    = np.fromstring(data.get("lat"),    sep=separator)[0]
         lon    = np.fromstring(data.get("lon"),    sep=separator)[0]
         speed  = np.fromstring(data.get("speed"),  sep=separator)[0]
+        print type(speed)
         acc_data = np.fromstring(data.get("acc_data"), sep=separator)
         com_data = np.fromstring(data.get("com_data"), sep=separator)
         tim_data = np.fromstring(data.get("tim_data"), sep=separator)
@@ -109,19 +110,28 @@ def get_pos():
     # sizeof acc_data, com_data and tim_data should be the same
 
     # prepare data for calculation
-    directions = cmn.aver_std_array(com_data, values)
-    times = cmn.label_array(tim_data, values)
-    acc_data = cmn.aver_std_array(acc_data, values)
-    acc_data = acc_data.reshape(len(acc_data)/2, 2)
-    speeds = sp.calculate_speed(acc_data, sp.predicted(acc_data), times, speed)
-    print speeds
-    coordinates = pos.calculate_position(speeds, tim_data, directions, lat, lon)
+    # TODO: should be changed, currently we need to send request frequently
+    print bcolors.WARNING + "Ignore values from request..." + bcolors.ENDC
+    values = len(com_data)
+
+    # prepare data for calculation
+    acc_data  = cmn.aver_std_array(acc_data, values)
+    acc_data  = acc_data.reshape(len(acc_data)/2, 2)
+    acceleration = acc_data.item(0,0)
+    direction = cmn.aver_std_array(com_data, values).item(0)
+    time = tim_data.item(-1)/1000 - tim_data.item(0)/1000
+    action    = sp.predicted(acc_data)
+    speed     = sp.get_speed(speed, time, acceleration, action)
+
+   
+    print "speed ", speed, " direct ", direction, " t ", time, " acc ", acceleration
+    coordinates = pos.calculate_position(speed, time, direction, lat, lon)
 
     _lat   = "%.6f" % coordinates[0]
     _lon   = "%.6f" % coordinates[1]
-    _speed = "%.2f" % coordinates[2]
+    _speed = speed
 
-    result = "lat: " + _lat  + "; lon: " + _lon + "; speed: " + _speed + "</strong>\n"
+    result = "lat: " + str(_lat)  + "; lon: " +str( _lon) + "; speed: " + str(_speed)
     print bcolors.OKGREEN, result, bcolors.ENDC
     return jsonify(lat=_lat, lon=_lon, speed=_speed)
 

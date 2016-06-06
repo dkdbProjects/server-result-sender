@@ -11,7 +11,7 @@ import speed   as sp
 import turns   as tr
 #import position as pos
 import behavior_defects as bd
-#import road_quality as rq
+import road_quality as rq
 
 np.set_printoptions(threshold='nan')
 
@@ -75,14 +75,14 @@ def test_road_quality_module(filename, plot, test_type):
     init_server.init_road_quality_module(filename_train, train_values, train_trees)
 
     if test_type == "full": # generate new dataset
-        print bcolors.HEADER + "initialize depend modules" + bcolors.ENDC
+        print bcolors.HEADER + "initialize dependent modules" + bcolors.ENDC
         init_server.init_speed_module   ("train_data/speed_acc_data.output",   10, 10)
         init_server.init_turns_module   ("train_data/turns_com_data.output",    5, 10)
         init_server.init_defects_module ("train_data/speed_acc_data.output",    5, 20)
         init_server.init_behavior_defects_module("train_data/behavior_defects_data.output", 1, 10) 
         print bcolors.OKGREEN + "Done! " + bcolors.ENDC
  
-        # load depend test data and classify actions
+        # load dependent test data and classify actions
         # structure: time,accx,accy,accz,compass,lat,lon,speed
         test_values = 10
         
@@ -175,13 +175,13 @@ def test_behavior_defects_module(filename, plot, test_type):
     init_server.init_behavior_defects_module(filename_train, train_values, train_trees)
     
     if test_type == "full": # generate new dataset
-        print bcolors.HEADER + "initialize depend modules" + bcolors.ENDC
-        init_server.init_speed_module   ("train_data/speed_acc_data.output",  5, 10)
-        init_server.init_turns_module   ("train_data/turns_com_data.output",  5, 10)
-        init_server.init_defects_module ("train_data/defects_acc_data.output",  5, 20)
+        print bcolors.HEADER + "initialize dependent modules" + bcolors.ENDC
+        init_server.init_speed_module   ("train_data/speed_acc_data.output",  10, 15)
+        init_server.init_turns_module   ("train_data/turns_com_data.output",   5, 10)
+        init_server.init_defects_module ("train_data/defects_acc_data.output", 5, 15)
         print bcolors.OKGREEN + "Done! " + bcolors.ENDC
  
-        # load depend test data and classify actions
+        # load dependent test data and classify actions
         # structure: time,accx,accy,accz,compass,lat,lon,speed
         test_values = 5
         
@@ -190,7 +190,7 @@ def test_behavior_defects_module(filename, plot, test_type):
         test_speed_data = test_speed_data.reshape(len(test_speed_data)/2, 2)
         predicted_speed = sp.predicted(test_speed_data)
         predicted_speed = predicted_speed.reshape(len(predicted_speed), 1)
-        print bcolors.OKGREEN + "Done! speed data:\n" + bcolors.ENDC, predicted_speed
+        print bcolors.OKGREEN + "Done! " + bcolors.ENDC#, predicted_speed
 
         print bcolors.HEADER + "Start getting turns data" + bcolors.ENDC
         test_turns_data = cmn.get_diff_array(cmn.load_data(filename, (4,)))
@@ -198,19 +198,20 @@ def test_behavior_defects_module(filename, plot, test_type):
         test_turns_data = test_turns_data.reshape(len(test_turns_data)/2, 2)
         predicted_turns = tr.predicted(test_turns_data)
         predicted_turns = predicted_turns.reshape(len(predicted_turns), 1)
-        print bcolors.OKGREEN + "Done! turns data:\n" + bcolors.ENDC, predicted_turns
+        print bcolors.OKGREEN + "Done! " + bcolors.ENDC#, predicted_turns
     
         print bcolors.HEADER + "Start getting defects data" + bcolors.ENDC
         test_defects_data = cmn.aver_std_array(cmn.load_data(filename, (3,)), test_values)
         test_defects_data = test_defects_data.reshape(len(test_defects_data)/2, 2)
         predicted_defects = df.predicted(test_defects_data)
         predicted_defects = predicted_defects.reshape(len(predicted_defects), 1)
-        print bcolors.OKGREEN + "Done! defects data:\n" + bcolors.ENDC, predicted_defects
+        print bcolors.OKGREEN + "Done! " + bcolors.ENDC#, predicted_defects
 
         print bcolors.HEADER + "Start generating test data" + bcolors.ENDC
         test_times = cmn.label_array(cmn.load_data(filename, (0,)), test_values)
         test_data  = np.hstack((predicted_speed, predicted_turns, predicted_defects))
-        print bcolors.OKGREEN + "Done! test_data:\n" + bcolors.ENDC, test_data
+        np.savetxt('generated_behavior_defects_data.output', test_data, delimiter=',', fmt='%i')
+        print bcolors.OKGREEN + "Done! " + bcolors.ENDC#, test_data
 
     elif test_type == "express":  
         # use default dataset
@@ -232,15 +233,27 @@ def test_behavior_defects_module(filename, plot, test_type):
         return
 
     # plot result is not used currently
-
-    # skip turns (angle > 10)
+    #if plot == "yes" :
+    #    train_speed_data   = cmn.label_array(cmn.load_data(filename_train, (1,)), train_values)
+    #    train_speed_data   = train_speed_data.reshape(len(train_speed_data), 1)
+    #    train_turns_data   = cmn.label_array(cmn.load_data(filename_train, (2,)), train_values)
+    #    train_turns_data   = train_turns_data.reshape(len(train_turns_data), 1)
+    #    train_defects_data = cmn.label_array(cmn.load_data(filename_train, (3,)), train_values)
+    #    train_defects_data = train_defects_data.reshape(len(train_defects_data), 1)
+    #    train_data = np.hstack((train_speed_data, train_turns_data, train_defects_data))
+    #    xx, yy = cmn.get_grid(train_data[:, [0, 1]])
+    #    train_predicted = bd.predicted(np.c_[xx.ravel(), yy.ravel()], 1).reshape(xx.shape)
+    #    #print "Train data\n", train_data
+    #    #print "Train predicted\n", train_predicted
+    #    test_predicted  = bd.predicted(test_data)
+    #    cmn.plot_2D_data(test_data, test_predicted, train_data, train_predicted, [0, 5.0], [0, 5.0]);
 
     # skip waiting (speed ~ 0)
 
     # check is arrays is empty
 
     # get new types for defects
-    raw_input("Press Enter to continue...")
+    raw_input(bcolors.OKBLUE + "Ready to start! Press Enter to continue..." + bcolors.ENDC)
     bd.find_actions(test_data, test_times)
     
     # writing defects to DB is not used in test module

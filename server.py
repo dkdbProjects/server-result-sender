@@ -40,9 +40,50 @@ def get_map(lat, lon, zoom):
     # return result
     return result
 
-@app.route("/send_collected_data", methods=['PUT'])
+@app.route("/send_collected_data", methods=['POST'])
 def send_data():
-    return "<strong>send_collected_data</strong>"
+    # get data
+    print bcolors.OKBLUE + "/send_collected, POST" + bcolors.ENDC
+    try:
+        print bcolors.HEADER + "Try get data..." + bcolors.ENDC
+        separator = ','
+        data     = request.json
+        _values   = np.fromstring(data.get("values"), sep=separator)[0]
+        _lat      = np.fromstring(data.get("lat"),    sep=separator)[0]
+        _lon      = np.fromstring(data.get("lon"),    sep=separator)[0]
+        acc_data = np.fromstring(data.get("acc_data"), sep=separator)
+        def_data = np.fromstring(data.get("def_data"), sep=separator)
+        com_data = np.fromstring(data.get("com_data"), sep=separator)
+        tim_data = np.fromstring(data.get("tim_data"), sep=separator)
+        print bcolors.OKGREEN + "Done!" + bcolors.ENDC
+    except Exception as e:
+        print bcolors.FAIL + "get_position: there are an exception! Pls, check data!" + bcolors.ENDC
+        abort(400)
+
+    # TODO: check data 
+    # sizeof acc_data, com_data and tim_data should be the same
+
+    # prepare data for calculation
+    # TODO: should be changed, currently we need to send request frequently
+    print bcolors.WARNING + "Ignore values from request..." + bcolors.ENDC
+    values = len(com_data)
+
+    com_data = cmn.aver_std_array(com_data, values)
+    com_data = acc_data.reshape(len(com_data)/2, 2)
+    predicted_turns = tr.predicted(com_data)
+  
+    acc_data = cmn.aver_std_array(acc_data, values)
+    acc_data = acc_data.reshape(len(acc_data)/2, 2)
+    predicted_speed = sp.predicted(acc_data)
+
+    def_data = cmn.aver_std_array(def_data, values)
+    def_data = def_data.reshape(len(def_data)/2, 2)
+    predicted_defects = sp.predicted(acc_data)
+
+    test_data  = np.hstack((predicted_speed, predicted_turns, predicted_defects))
+    _status = bd.predicted(test_data) 
+
+    return jsonify(status=_status, lat=_lat, lon=_lon)
 
 @app.route("/get_position", methods=['POST'])
 def get_pos():
@@ -89,7 +130,7 @@ if __name__ == '__main__':
     print bcolors.HEADER + "Initialize modules" + bcolors.ENDC
     init_server.init_speed_module   ("train_data/speed_acc_data.output",   10, 10)
     init_server.init_turns_module   ("train_data/turns_com_data.output",    5, 10)
-    init_server.init_defects_module ("train_data/speed_acc_data.output",   10, 10)
+    init_server.init_defects_module ("train_data/defects_acc_data.output",   10, 10)
     init_server.init_behavior_defects_module("train_data/behavior_defects_data.output", 1, 10)
     init_server.init_road_quality_module("train_data/road_quality_data.output", 1, 10)
     print bcolors.OKGREEN + "Done! " + bcolors.ENDC

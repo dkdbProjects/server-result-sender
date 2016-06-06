@@ -48,9 +48,9 @@ def send_data():
         print bcolors.HEADER + "Try get data..." + bcolors.ENDC
         separator = ','
         data     = request.json
-        _values   = np.fromstring(data.get("values"), sep=separator)[0]
-        _lat      = np.fromstring(data.get("lat"),    sep=separator)[0]
-        _lon      = np.fromstring(data.get("lon"),    sep=separator)[0]
+        _values  = np.fromstring(data.get("values"), sep=separator)[0]
+        _lat     = np.fromstring(data.get("lat"),    sep=separator)[0]
+        _lon     = np.fromstring(data.get("lon"),    sep=separator)[0]
         acc_data = np.fromstring(data.get("acc_data"), sep=separator)
         def_data = np.fromstring(data.get("def_data"), sep=separator)
         com_data = np.fromstring(data.get("com_data"), sep=separator)
@@ -68,20 +68,29 @@ def send_data():
     print bcolors.WARNING + "Ignore values from request..." + bcolors.ENDC
     values = len(com_data)
 
+    com_data = cmn.get_diff_array(com_data)
     com_data = cmn.aver_std_array(com_data, values)
-    com_data = acc_data.reshape(len(com_data)/2, 2)
+    com_data = com_data.reshape(1, 2)
+    print "com_data is ", com_data
     predicted_turns = tr.predicted(com_data)
-  
+    print predicted_turns
+ 
     acc_data = cmn.aver_std_array(acc_data, values)
-    acc_data = acc_data.reshape(len(acc_data)/2, 2)
+    acc_data = acc_data.reshape(1, 2)
+    print "acc_data is ", acc_data
     predicted_speed = sp.predicted(acc_data)
+    print predicted_speed
 
     def_data = cmn.aver_std_array(def_data, values)
-    def_data = def_data.reshape(len(def_data)/2, 2)
-    predicted_defects = sp.predicted(acc_data)
+    def_data = def_data.reshape(1, 2)
+    print "def_data is ", def_data
+    predicted_defects = df.predicted(def_data)
+    print predicted_defects
 
-    test_data  = np.hstack((predicted_speed, predicted_turns, predicted_defects))
-    _status = bd.predicted(test_data) 
+    test_data  = np.hstack((predicted_speed.item(0), predicted_turns.item(0), predicted_defects.item(0)))
+    test_data  = test_data.reshape(1, 3)
+    print test_data
+    _status = bd.predicted(test_data).item(0) 
 
     return jsonify(status=_status, lat=_lat, lon=_lon)
 
@@ -138,9 +147,9 @@ def get_pos():
 if __name__ == '__main__':
     # initialize modules for classification
     print bcolors.HEADER + "Initialize modules" + bcolors.ENDC
-    init_server.init_speed_module   ("train_data/speed_acc_data.output",   10, 10)
+    init_server.init_speed_module   ("train_data/speed_acc_data.output",   10, 15)
     init_server.init_turns_module   ("train_data/turns_com_data.output",    5, 10)
-    init_server.init_defects_module ("train_data/defects_acc_data.output",   10, 10)
+    init_server.init_defects_module ("train_data/defects_acc_data.output",   5, 15)
     init_server.init_behavior_defects_module("train_data/behavior_defects_data.output", 1, 10)
     init_server.init_road_quality_module("train_data/road_quality_data.output", 1, 10)
     print bcolors.OKGREEN + "Done! " + bcolors.ENDC

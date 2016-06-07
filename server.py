@@ -144,14 +144,20 @@ def get_pos():
     print bcolors.OKGREEN, result, bcolors.ENDC
     return jsonify(lat=_lat, lon=_lon, speed=_speed)
 
-if __name__ == '__main__':
-    # initialize modules for classification
-    print bcolors.HEADER + "Initialize modules" + bcolors.ENDC
-    init_server.init_speed_module   ("train_data/speed_acc_data.output",   10, 15)
-    init_server.init_turns_module   ("train_data/turns_com_data.output",    5, 10)
-    init_server.init_defects_module ("train_data/defects_acc_data.output",   5, 15)
-    init_server.init_behavior_defects_module("train_data/behavior_defects_data.output", 1, 10)
-    init_server.init_road_quality_module("train_data/road_quality_data.output", 1, 10)
-    print bcolors.OKGREEN + "Done! " + bcolors.ENDC
-    # run app
+@app.route("/", methods=['GET']) 
+def init(): 
+# initialize modules for classification 
+    print bcolors.HEADER + "Initialize modules" + bcolors.ENDC 
+    init_server.init_speed_module ("train_data/speed_acc_data.output", 10, 15) 
+    init_server.init_turns_module ("train_data/turns_com_data.output", 5, 10) 
+    init_server.init_defects_module ("train_data/defects_acc_data.output", 5, 15) 
+    init_server.init_behavior_defects_module("train_data/behavior_defects_data.output", 1, 10) 
+    init_server.init_road_quality_module("train_data/road_quality_data.output", 1, 10) 
+    print bcolors.OKGREEN + "Done! " + bcolors.ENDC 
+    return "<strong>Initialization done!</strong>" 
+    # run app 
+
+if __name__ == '__main__': 
+    init() 
+    # run app 
     app.run()

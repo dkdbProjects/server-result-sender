@@ -7,6 +7,8 @@ from threading import Timer
 from flask_restful import reqparse
 from flask.ext.mysqldb import MySQL
 
+import os
+import json
 import numpy    as np
 import common   as cmn
 import defects  as df
@@ -28,18 +30,54 @@ class bcolors:
     UNDERLINE = '\033[4m'
 
 app = Flask(__name__)
-mysql = MySQL(app)
-app.config.from_pyfile('server.cfg')
+mysql = ()
 
-@app.route("/get_defect_map/<float:lat>/<float:lon>/<int:zoom>", methods=['GET'])
-def get_map(lat, lon, zoom):
-    # get polylines from db in nearest area of user position
+####################################################################
+####################################################################
+####################################################################
+####################################################################
+####################################################################
+@app.route("/update_map", methods=['GET'])
+def update_map():
+    # foreach road section from road_section_table
+        # get defect list from defects_table and count defects by type
+        # normalize counts (<1) 
+        # predict road quality
+        # write predicted result in road_section_table
+    return "<strong>Updated!</strong>"
 
-    # create reply
-    result = "<strong>" + str(lat) + "," + str(lon) + "," + str(zoom) + "</strong>"
-    # return result
-    return result
+####################################################################
+####################################################################
+####################################################################
+####################################################################
+####################################################################
+#@app.route("/get_defect_map/<float:lat>/<float:lon>/<int:zoom>", methods=['GET'])
+#def get_map(lat, lon, zoom):
+@app.route("/get_defect_map", methods=['GET'])
+def get_map():
+    _lines = get_road_sections()
+    return jsonify(lines=_lines)
 
+def get_road_sections():
+    cursor   = mysql.connection.cursor()
+    query = """SELECT startpoint.lat, startpoint.lon, endpoint.lat, endpoint.lon, section_type FROM  dkdbprojects.road_sections 
+JOIN  dkdbprojects.section_points AS startpoint ON dkdbprojects.road_sections.start_point = startpoint.point_id 
+JOIN  dkdbprojects.section_points AS endpoint   ON dkdbprojects.road_sections.end_point   = endpoint.point_id ;"""
+    print bcolors.HEADER +"Exectute: \n" + bcolors.ENDC, query
+    cursor.execute(query)
+    data = cursor.fetchall()
+    _lines = []
+    # get list of road sections near the user position
+    for row in data:
+        line = {"start_lat": row[0], "start_lon": row[1], "end_lat": row[2], "end_lon": row[3], "color": row[4]}
+        _lines.append(line)
+    return _lines
+
+####################################################################
+####################################################################
+####################################################################
+####################################################################
+####################################################################
 @app.route("/send_collected_data", methods=['POST'])
 def send_data():
     # get data
@@ -71,29 +109,69 @@ def send_data():
     com_data = cmn.get_diff_array(com_data)
     com_data = cmn.aver_std_array(com_data, values)
     com_data = com_data.reshape(1, 2)
-    print "com_data is ", com_data
     predicted_turns = tr.predicted(com_data)
-    print predicted_turns
  
     acc_data = cmn.aver_std_array(acc_data, values)
     acc_data = acc_data.reshape(1, 2)
-    print "acc_data is ", acc_data
     predicted_speed = sp.predicted(acc_data)
-    print predicted_speed
 
     def_data = cmn.aver_std_array(def_data, values)
     def_data = def_data.reshape(1, 2)
-    print "def_data is ", def_data
     predicted_defects = df.predicted(def_data)
-    print predicted_defects
 
     test_data  = np.hstack((predicted_speed.item(0), predicted_turns.item(0), predicted_defects.item(0)))
     test_data  = test_data.reshape(1, 3)
     print test_data
-    _status = bd.predicted(test_data).item(0) 
+    _status = bd.predicted(test_data).item(0)
+    print "Status is ", _status 
 
+    # write defect to defect_table (facepalm version...)
+    cursor   = mysql.connection.cursor()
+    direction = predicted_turns.item(0) # TODO should be 0 or 1:
+
+    query = """SELECT section_id FROM  dkdbprojects.road_sections 
+JOIN  dkdbprojects.section_points AS startpoint ON dkdbprojects.road_sections.start_point = startpoint.point_id 
+JOIN  dkdbprojects.section_points AS endpoint   ON dkdbprojects.road_sections.end_point   = endpoint.point_id 
+WHERE 
+(
+    (startpoint.lat < """ + str(_lat) + """ AND endpoint.lat > """ + str(_lat) + """ )
+    OR 
+    (startpoint.lat > """ + str(_lat) + """ AND endpoint.lat < """ + str(_lat) + """ )
+) 
+AND 
+(
+    (startpoint.lon < """ + str(_lon) + """ AND endpoint.lon > """ + str(_lon) + """ )
+    OR
+    (startpoint.lon > """ + str(_lon) + """ AND endpoint.lon < """ + str(_lon) + """ )
+);"""
+
+    print bcolors.HEADER +"Exectute: \n" + bcolors.ENDC, query
+    cursor.execute(query)
+    data = cursor.fetchall()
+    
+    if len(data) == 0:
+        print bcolors.WARNING + "Result is empty!" + bcolors.ENDC
+        values = str(_lat) + ", " + str(_lon) + ", " + str(direction) + ", " + str (_status)
+        query = "INSERT INTO dkdbprojects.defects (lat, lon, direction, defect_type) VALUES (" + values + ");"
+    else:
+        print bcolors.OKGREEN + "OK!" + bcolors.ENDC + " result len is " + str (len(data))
+        result = (data[0])[0]
+        print result
+        values = str(_lat) + ", " + str(_lon) + ", " + str(direction) + ", " + str (_status) + ", " +  str(result)
+        query = "INSERT INTO dkdbprojects.defects (lat, lon, direction, defect_type, section_id) VALUES (" + values + ");"
+
+    print bcolors.HEADER +"Exectute: \n" + bcolors.ENDC, query
+    cursor.execute(query)
+    mysql.connection.commit()
+    
+    print bcolors.OKGREEN +"OK! Exit..." + bcolors.ENDC
     return jsonify(status=_status, lat=_lat, lon=_lon)
 
+####################################################################
+####################################################################
+####################################################################
+####################################################################
+####################################################################
 @app.route("/get_position", methods=['POST'])
 def get_pos():
     # get data
@@ -144,20 +222,55 @@ def get_pos():
     print bcolors.OKGREEN, result, bcolors.ENDC
     return jsonify(lat=_lat, lon=_lon, speed=_speed)
 
+####################################################################
+####################################################################
+####################################################################
+####################################################################
+####################################################################
+init_type="openshift"
 @app.route("/", methods=['GET']) 
 def init(): 
-# initialize modules for classification 
+    # initialize modules for classification 
     print bcolors.HEADER + "Initialize modules" + bcolors.ENDC 
     init_server.init_speed_module ("train_data/speed_acc_data.output", 10, 15) 
     init_server.init_turns_module ("train_data/turns_com_data.output", 5, 10) 
     init_server.init_defects_module ("train_data/defects_acc_data.output", 5, 15) 
     init_server.init_behavior_defects_module("train_data/behavior_defects_data.output", 1, 10) 
-    init_server.init_road_quality_module("train_data/road_quality_data.output", 1, 10) 
+    init_server.init_road_quality_module("train_data/road_quality_data.output", 1, 10)
+    connect_to_db(init_type)
     print bcolors.OKGREEN + "Done! " + bcolors.ENDC 
     return "<strong>Initialization done!</strong>" 
-    # run app 
 
+####################################################################
+####################################################################
+####################################################################
+####################################################################
+####################################################################
+
+def connect_to_db(init_type):
+    # connect to database
+    if init_type == "openshift" :
+        app.config['MYSQL_USER']     =  os.environ['OPENSHIFT_MYSQL_DB_USERNAME']
+        app.config['MYSQL_PASSWORD'] =  os.environ['OPENSHIFT_MYSQL_DB_PASSWORD']
+        app.config['MYSQL_DB']       = 'dkdbprojects'
+        app.config['MYSQL_HOST']     =  os.environ['OPENSHIFT_MYSQL_DB_HOST']
+    else :
+        app.config['MYSQL_USER']     = 'root'
+        app.config['MYSQL_PASSWORD'] = '6829866'
+        app.config['MYSQL_DB']       = 'dkdbprojects'
+        app.config['MYSQL_HOST']     = 'localhost'
+    global mysql
+    mysql = MySQL()
+    mysql.init_app(app)
+    return
+
+####################################################################
+####################################################################
+####################################################################
+####################################################################
+####################################################################
 if __name__ == '__main__': 
+    init_type="local"
     init() 
     # run app 
     app.run()

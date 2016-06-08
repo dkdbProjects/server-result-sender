@@ -30,7 +30,7 @@ class bcolors:
     UNDERLINE = '\033[4m'
 
 app = Flask(__name__)
-mysql = ()
+app.config.from_pyfile('server.cfg')
 
 ####################################################################
 ####################################################################
@@ -274,3 +274,6 @@ if __name__ == '__main__':
     init() 
     # run app 
     app.run()
+else :
+    init_type="openshift"
+    init()

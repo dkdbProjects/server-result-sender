@@ -44,6 +44,18 @@ def update_map():
         # normalize counts (<1) 
         # predict road quality
         # write predicted result in road_section_table
+    cursor   = mysql.connection.cursor()
+    query = """
+UPDATE   
+  dkdbprojects.road_sections, 
+  (SELECT section_id, defect_type FROM 
+      (SELECT section_id, defect_type, COUNT(1) AS num FROM dkdbprojects.defects GROUP BY section_id ORDER BY num DESC) 
+  x GROUP BY section_id) a  
+SET dkdbprojects.road_sections.section_type = a.defect_type 
+WHERE dkdbprojects.road_sections.section_id = a.section_id;
+"""
+    print bcolors.HEADER +"Exectute: \n" + bcolors.ENDC, query
+    cursor.execute(query)
     return "<strong>Updated!</strong>"
 
 ####################################################################
@@ -55,6 +67,7 @@ def update_map():
 #def get_map(lat, lon, zoom):
 @app.route("/get_defect_map", methods=['GET'])
 def get_map():
+    update_map()
     _lines = get_road_sections()
     return jsonify(lines=_lines)
 
@@ -124,7 +137,8 @@ def send_data():
     print test_data
     _status = bd.predicted(test_data).item(0)
     print "Status is ", _status 
-
+    if _status == 0:
+        return jsonify(status=_status, lat=_lat, lon=_lon)
     # write defect to defect_table (facepalm version...)
     cursor   = mysql.connection.cursor()
     direction = predicted_turns.item(0) # TODO should be 0 or 1:
